@@ -32,35 +32,40 @@ $ rails generate featureomatic:install
 
 Restart your server and it's off to the races!
 
-First thing you'll want to checkout is the `./app/features/application_feature.rb` file:
+First thing you'll want to checkout is the `./app/plans/application_plan.rb` file:
 
 ```ruby
-class ApplicationFeature < Featureomatic::Base
-  attr_reader :user
+class ApplicationPlan < Featureomatic::Base
+  attr_reader :user, :account
 
   def initialize(user)
     @user = user
+    @account = user.account
   end
 
-  def enabled?
-    user.paid?
+  def team_size
+    hard_limit limit: 0, quantity: account.users.count
+  end
+
+  def moderation
+    boolean_limit account.users.name
+  end
+
+  def support
+    disabled
   end
 end
 ```
 
+You'll setup your constructor that you'll use to figure out whether or not a person has access to a plan feature, or not.
+
 ## Usage
 
-Ready to add a new feature? Sweet! Just run this:
-
-```bash
-$ rails generate featureomatic:new ModerationFeature
-```
-
-That creates the following file:
+Ready to add a new feature to your plan? Sweet!
 
 ```ruby
 # ./app/features/moderation_feature.rb
-class ModerationFeature < ApplicationFeature
+class ModerationFeature < ApplicationPlan
   def name
     "Moderation"
   end
@@ -97,7 +102,7 @@ Or from views:
 Let's talk about that enterprise use-case that deals with all sorts of craziness:
 
 ```ruby
-class ApplicationFeature < Featureomatic::Base
+class ApplicationPlan < Featureomatic::Base
   def initialize(user, account)
     @user = user
     @account = account
