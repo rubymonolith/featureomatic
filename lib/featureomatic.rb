@@ -6,76 +6,32 @@ module Featureomatic
     Class.new(Featureomatic::BasePlan, &block)
   end
 
-  class BasePlan
+  class Feature
+    delegate :enabled?, :disabled?, to: :limit
 
-    def feature(name, limit: {})
-      Feature.new name: name, limit: limit, plan: self
+    attr_reader :plan, :limit, :name
+
+    def initialize(plan:, limit:, name:)
+      @plan = plan
+      @limit = limit
+      @name = name
     end
 
-    private
-    def hard_limit(**kwargs)
-      HardLimit.new(**kwargs)
+    def upgrade
+      Upgrade.new(plan)
     end
 
-    def soft_limit(**kwargs)
-      SoftLimit.new(**kwargs)
+    def downgrade
+      Downgrade.new(plan)
     end
 
-    def enabled(value = true)
-      BooleanLimit.new enabled: value
+    def limit
+      Limit.new
     end
+  end
 
-    def disabled(value = true)
-      enabled !value
-    end
-
-    class Upgrade
-      def initialize(plan, feature)
-        @plan = plan
-        @feature = feature
-      end
-
-      def upgradable?
-        plan.next.present?
-      end
-    end
-
-    class Downgrade
-      def initialize(plan, feature)
-        @plan = plan
-        @feature = feature
-      end
-
-      def downgradable?
-        plan.previous.present?
-      end
-    end
-
-    class Feature
-      delegate :enabled?, :disabled?, to: :limit
-
-      attr_reader :plan, :limit, :name
-
-      def initialize(plan:, limit:, name:)
-        @plan = plan
-        @limit = limit
-        @name = name
-      end
-
-      def upgrade
-        Upgrade.new(plan)
-      end
-
-      def downgrade
-        Downgrade.new(plan)
-      end
-
-      def limit
-        Limit.new
-      end
-    end
-
-    class Limit
+  module Limit
+    class Base
       def enabled?
         false
       end
@@ -85,10 +41,12 @@ module Featureomatic
       end
     end
 
-    class HardLimit < Limit
+    class HardLimit < Base
       attr_accessor :quantity, :maximum
 
       def initialize(quantity: , maximum: )
+        @quantity = quantity
+        @maximum = maximum
       end
 
       def exceeded?
@@ -100,7 +58,7 @@ module Featureomatic
       end
     end
 
-    class SoftLimit < Limit
+    class SoftLimit < HardLimit
       attr_accessor :quantity, :soft_limit, :hard_limit
 
       def initialize(quantity: , soft_limit: , hard_limit: )
@@ -109,16 +67,25 @@ module Featureomatic
         @hard_limit = hard_limit
       end
 
-      def exceeded?
-        quantity > hard_limit
-      end
-
-      def enabled?
-        not exceeded?
+      def maximum
+        @soft_limit
       end
     end
 
-    class BooleanLimit < Limit
+    # Unlimited is treated like a SoftLimit, initialized with infinity values.
+    # It is recommended to set a `soft_limit` value based on the technical limitations
+    # of your application unless you're running a theoritcal Turing Machine.
+    #
+    # See https://en.wikipedia.org/wiki/Turing_machine for details.
+    class Unlimited < SoftLimit
+      INFINITY = Float::INFINITY
+
+      def initialize(quantity: nil, hard_limit: INFINITY, soft_limit: INFINITY, **kwargs)
+        super(quantity: quantity, hard_limit: hard_limit, soft_limit: soft_limit, **kwargs)
+      end
+    end
+
+    class BooleanLimit < Base
       def initialize(enabled:)
         @enabled = enabled
       end
@@ -127,5 +94,34 @@ module Featureomatic
         @enabled
       end
     end
+  end
+
+  class BasePlan
+    def upgrade
+    end
+
+    def downgrade
+    end
+
+    private
+      def hard_limit(**kwargs)
+        Limit::HardLimit.new(**kwargs)
+      end
+
+      def soft_limit(**kwargs)
+        Limit::SoftLimit.new(**kwargs)
+      end
+
+      def unlimited(**kwargs)
+        Limit::Unlimited.new(**kwargs)
+      end
+
+      def enabled(value = true, **kwargs)
+        Limit::BooleanLimit.new enabled: value, **kwargs
+      end
+
+      def disabled(value = true)
+        enabled !value
+      end
   end
 end
