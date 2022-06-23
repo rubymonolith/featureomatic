@@ -2,10 +2,14 @@ require "featureomatic/version"
 require "featureomatic/engine"
 
 module Featureomatic
+  def self.plan(&block)
+    Class.new(Featureomatic::BasePlan, &block)
+  end
+
   class BasePlan
 
-    def feature
-      Feature.new
+    def feature(name, limit: {})
+      Feature.new name: name, limit: limit, plan: self
     end
 
     private
@@ -48,8 +52,14 @@ module Featureomatic
     end
 
     class Feature
-      def initialize(plan)
+      delegate :enabled?, :disabled?, to: :limit
+
+      attr_reader :plan, :limit, :name
+
+      def initialize(plan:, limit:, name:)
         @plan = plan
+        @limit = limit
+        @name = name
       end
 
       def upgrade

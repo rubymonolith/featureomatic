@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Featureomatic::BasePlan do
   let(:plan_klass) do
-    Class.new Featureomatic::BasePlan do
+    Featureomatic.plan do
       def seats
         soft_limit quantity: 37, soft_limit: 100, hard_limit: 110
       end
@@ -17,6 +17,10 @@ RSpec.describe Featureomatic::BasePlan do
 
       def phone_support
         disabled
+      end
+
+      def phone_support
+        feature "Phone Support", limit: hard_limit(quantity: 6, maximum: 100)
       end
     end
   end
