@@ -3,7 +3,7 @@ require "featureomatic/engine"
 
 module Featureomatic
   def self.plan(&block)
-    Class.new(Featureomatic::BasePlan, &block)
+    Class.new(Featureomatic::Plan, &block)
   end
 
   class Feature
@@ -96,7 +96,7 @@ module Featureomatic
     end
   end
 
-  class BasePlan
+  class Plan
     def upgrade
     end
 

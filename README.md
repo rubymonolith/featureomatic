@@ -35,7 +35,7 @@ Restart your server and it's off to the races!
 First thing you'll want to checkout is the `./app/plans/application_plan.rb` file:
 
 ```ruby
-class ApplicationPlan < Featureomatic::Base
+class ApplicationPlan < Featureomatic::Plan
   attr_reader :user, :account
 
   def initialize(user)
@@ -102,7 +102,7 @@ Or from views:
 Let's talk about that enterprise use-case that deals with all sorts of craziness:
 
 ```ruby
-class ApplicationPlan < Featureomatic::Base
+class ApplicationPlan < Featureomatic::Plan
   def initialize(user, account)
     @user = user
     @account = account
