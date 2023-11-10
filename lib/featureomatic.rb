@@ -49,6 +49,10 @@ module Featureomatic
         @maximum = maximum
       end
 
+      def remaining
+        maximum - quantity
+      end
+
       def exceeded?
         quantity > maximum if quantity and maximum
       end
