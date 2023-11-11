@@ -108,20 +108,20 @@ module Featureomatic
     end
 
     private
-      def hard_limit(**kwargs)
-        Limit::HardLimit.new(**kwargs)
+      def hard_limit(**)
+        Limit::HardLimit.new(**)
       end
 
-      def soft_limit(**kwargs)
-        Limit::SoftLimit.new(**kwargs)
+      def soft_limit(**)
+        Limit::SoftLimit.new(**)
       end
 
-      def unlimited(**kwargs)
-        Limit::Unlimited.new(**kwargs)
+      def unlimited(**)
+        Limit::Unlimited.new(**)
       end
 
-      def enabled(value = true, **kwargs)
-        Limit::BooleanLimit.new enabled: value, **kwargs
+      def enabled(value = true, **)
+        Limit::BooleanLimit.new enabled: value, **
       end
 
       def disabled(value = true)
