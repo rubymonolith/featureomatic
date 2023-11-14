@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Featureomatic::BasePlan do
+RSpec.describe Featureomatic::Plan do
   let(:plan_klass) do
     Featureomatic.plan do
       def seats
